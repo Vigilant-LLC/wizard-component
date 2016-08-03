@@ -2,6 +2,9 @@ var Modal = function(params) {
   if(!params || typeof(params) !== 'object') { params = {}; }
   var _noop = function() {};
 
+  var _ajaxSuccessResponses = [ false ];
+  var _modalAjaxIndex = 0;
+  var _$modal;
   var _params = $.extend(
     true,
     {
@@ -10,14 +13,19 @@ var Modal = function(params) {
       templateDomId: '#modal', /*** required on creation ***/
 
       /*** Modal Content ***/
+      size: '',
       title: '',
       titleDomId: '#modalTitle', /* required on creation */
       ribbonContent: '',
+      ribbonContentUrl: '', /* required on creation */
       ribbonContentDomId: '#modalRibbonContent', /* required on creation */
       mainContent: '',
+      mainContentUrl: '', /* required on creation */
       mainContentDomId: '#modalMainContent', /* required on creation */
 
       /*** Buttons ***/
+      // All button functions will be passed the modal object so that they may
+      // utilize anything from the modal that they choose.
       backButtonText: 'Back',
       backButtonFunction: _noop,
       backButtonIsVisible: false,
@@ -32,15 +40,31 @@ var Modal = function(params) {
       nextButtonDomId: '#modalNextButton', /* required on creation */
 
       /*** Modal Actions ***/
-      // Method runs before the modal is shown, and is passed the modal object
+      // Method runs before the modal is in the show state,
+      // and is passed the modal object
       // that has already been set up so that the method can clean up input fields
       // or set up input fields depending on what its needs are
       // first parameter will be the modal jQuery object
       // second parameter will be the data object that can be used to set up the default options
-      onShownFunction: _noop
+      onShowFunction: _noop
     },
     params
   );
+
+  var _isModalInDomTimeout;
+  var _isModalInDomTimeoutCount = 1200; // 1 minute at 50 milisecond intervals
+  var _checkIfModalIsReady = function() {
+    clearTimeout(_isModalInDomTimeout);
+    if(_isModalInDomTimeoutCount-- > 0) {
+      if(loadedModalComponent) {
+        _ajaxSuccessResponses[_modalAjaxIndex] = true;
+      } else {
+        _isModalInDomTimeout = setTimeout(function() {
+          _checkIfModalIsReady();
+        }, 50);
+      }
+    }
+  }
 
   /*** Grab the modal html ***/
   if(typeof(loadedModalComponent) === 'undefined') {
@@ -50,54 +74,113 @@ var Modal = function(params) {
       url: _params.templateUrl,
       success: function(html) {
         loadedModalComponent = true;
+        _ajaxSuccessResponses[_modalAjaxIndex] = true;
         $('body').append(html);
       },
       error: function(err) {
         //TODO: add in error function & maybe a retry mechanism
       }
     });
+  } else {
+    _checkIfModalIsReady();
   }
 
+  if(typeof(_params.ribbonContentUrl) === 'string' && _params.ribbonContentUrl.length != 0) {
+    var ribbonAjaxIndex = _ajaxSuccessResponses.length;
+    _ajaxSuccessResponses.push(false);
+    $.ajax({
+      type: 'GET',
+      url: _params.ribbonContentUrl,
+      success: function(content) {
+        _params.ribbonContent = content;
+        _ajaxSuccessResponses[ribbonAjaxIndex] = true;
+      },
+      error: function(err) {
+        // TODO: clean this up to be a more friendly response
+        _params.ribbonContent = err;
+      }
+    });
+  }
+
+  if(typeof(_params.mainContentUrl) === 'string' && _params.mainContentUrl.length != 0) {
+    var mainContentAjaxIndex = _ajaxSuccessResponses.length;
+    _ajaxSuccessResponses.push(false);
+    $.ajax({
+      type: 'GET',
+      url: _params.mainContentUrl,
+      success: function(content) {
+        _params.mainContent = content;
+        _ajaxSuccessResponses[mainContentAjaxIndex] = true;
+      },
+      error: function(err) {
+        // TODO: clean this up to be a more friendly response
+        _params.mainContent = err;
+      }
+    });
+  }
+
+  var _backButtonFunction = function() {
+    _params.backButtonFunction(_$modal);
+  };
+
+  var _cancelButtonFunction = function() {
+    _params.backButtonFunction(_$modal);
+  };
+
+  var _nextButtonFunction = function() {
+    _params.nextButtonFunction(_$modal);
+  };
+
   var _setUpModal = function(data) {
-    $modal = $(_params.templateDomId);
-    $(_params.titleDomId, $modal).html(_params.title);
-    $(_params.ribbonContentDomId, $modal).html(_params.ribbonContent);
-    $(_params.mainContentDomId, $modal).html(_params.mainContent);
+    if(!_$modal) { _$modal = $(_params.templateDomId); }
+    $('.modal-dialog', _$modal).removeClass('modal-sm modal-lg')
+    .addClass(_params.size);
+    $(_params.titleDomId, _$modal).html(_params.title);
+    $(_params.ribbonContentDomId, _$modal).html(_params.ribbonContent);
+    $(_params.mainContentDomId, _$modal).html(_params.mainContent);
 
-    $(_params.backButtonDomId, $modal).html(_params.backButtonText);
-    $(_params.backButtonDomId, $modal)
+    $(_params.backButtonDomId, _$modal).html(_params.backButtonText);
+    $(_params.backButtonDomId, _$modal)
     .off('click')
-    .on('click', _params.backButtonFunction);
-    $(_params.backButtonDomId, $modal).show();
+    .on('click', _backButtonFunction);
+    $(_params.backButtonDomId, _$modal).show();
     if(!_params.backButtonIsVisible) {
-      $(_params.backButtonDomId, $modal).hide();
+      $(_params.backButtonDomId, _$modal).hide();
     }
 
-    $(_params.cancelButtonDomId, $modal).html(_params.cancelButtonText);
-    $(_params.cancelButtonDomId, $modal)
+    $(_params.cancelButtonDomId, _$modal).html(_params.cancelButtonText);
+    $(_params.cancelButtonDomId, _$modal)
     .off('click')
-    .on('click', _params.cancelButtonFunction);
-    $(_params.cancelButtonDomId, $modal).show();
+    .on('click', _cancelButtonFunction);
+    $(_params.cancelButtonDomId, _$modal).show();
     if(!_params.cancelButtonIsVisible) {
-      $(_params.cancelButtonDomId, $modal).hide();
+      $(_params.cancelButtonDomId, _$modal).hide();
     }
 
-    $(_params.nextButtonDomId, $modal).html(_params.nextButtonText);
-    $(_params.nextButtonDomId, $modal)
+    $(_params.nextButtonDomId, _$modal).html(_params.nextButtonText);
+    $(_params.nextButtonDomId, _$modal)
     .off('click')
-    .on('click', _params.nextButtonFunction);
-    $(_params.nextButtonDomId, $modal).show();
+    .on('click', _nextButtonFunction);
+    $(_params.nextButtonDomId, _$modal).show();
     if(!_params.nextButtonIsVisible) {
-      $(_params.nextButtonDomId, $modal).hide();
+      $(_params.nextButtonDomId, _$modal).hide();
     }
 
-    _params.onShownFunction($modal, data);
-    return $modal;
+    _params.onShowFunction(_$modal, data);
+    return _$modal;
   };
 
   return {
+    setSize: function(size) {
+      if(typeof(size) === 'string' && size.length > 0) {
+        _params.size = size;
+      }
+      return this;
+    },
     setTitle: function(title) {
-      if(typeof(title) === 'string' && title.length > 0) { _params.title = title; }
+      if(typeof(title) === 'string' && title.length > 0) {
+        _params.title = title;
+      }
       return this;
     },
     setRibbonContent: function(ribbonContent) {
@@ -166,6 +249,21 @@ var Modal = function(params) {
       }
       return this;
     },
-    show: function(data) { _setUpModal(data).modal('show'); }
+    isModalReady: function() {
+      var readyCount = 0;
+      for(var i = 0; i < _ajaxSuccessResponses.length; i++) {
+        if(_ajaxSuccessResponses[i] === true) { readyCount++; }
+      }
+      return (readyCount === _ajaxSuccessResponses.length) ? true : false;
+    },
+    show: function(data) {
+      if(!this.isModalReady()) {
+        // TODO: add in a friendly message alerting that the modal is not ready yet
+        return false;
+      } else {
+        _setUpModal(data).modal('show');
+      }
+    },
+    update: function(data) { this.show(data); }
   };
 };
