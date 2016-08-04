@@ -40,13 +40,19 @@ var Modal = function(params) {
       nextButtonDomId: '#modalNextButton', /* required on creation */
 
       /*** Modal Actions ***/
-      // Method runs before the modal is in the show state,
-      // and is passed the modal object
+      // Method runs before the modal is shown and is passed the modal object
       // that has already been set up so that the method can clean up input fields
       // or set up input fields depending on what its needs are
       // first parameter will be the modal jQuery object
-      // second parameter will be the data object that can be used to set up the default options
-      onShowFunction: _noop
+      // second parameter will be the actual Modal object to reset
+      // third parameter will be the data object that can be used to set up the default options
+      onShowFunction: _noop, /* required on creation */
+
+      //Method runs when the modal is shown
+      // first parameter will be the modal jQuery object
+      // second parameter will be the actual Modal object to reset
+      // third parameter will be the data object that can be used to set up the default options
+      onShownFunction: _noop /* required on creation */
     },
     params
   );
@@ -134,40 +140,34 @@ var Modal = function(params) {
   var _setUpModal = function(data) {
     if(!_$modal) { _$modal = $(_params.templateDomId); }
     $('.modal-dialog', _$modal).removeClass('modal-sm modal-lg')
-    .addClass(_params.size);
+      .addClass(_params.size);
     $(_params.titleDomId, _$modal).html(_params.title);
     $(_params.ribbonContentDomId, _$modal).html(_params.ribbonContent);
     $(_params.mainContentDomId, _$modal).html(_params.mainContent);
 
     $(_params.backButtonDomId, _$modal).html(_params.backButtonText);
-    $(_params.backButtonDomId, _$modal)
-    .off('click')
-    .on('click', _backButtonFunction);
+    $(_params.backButtonDomId, _$modal).off('click')
+      .on('click', _backButtonFunction);
     $(_params.backButtonDomId, _$modal).show();
     if(!_params.backButtonIsVisible) {
       $(_params.backButtonDomId, _$modal).hide();
     }
 
     $(_params.cancelButtonDomId, _$modal).html(_params.cancelButtonText);
-    $(_params.cancelButtonDomId, _$modal)
-    .off('click')
-    .on('click', _cancelButtonFunction);
+    $(_params.cancelButtonDomId, _$modal).off('click')
+      .on('click', _cancelButtonFunction);
     $(_params.cancelButtonDomId, _$modal).show();
     if(!_params.cancelButtonIsVisible) {
       $(_params.cancelButtonDomId, _$modal).hide();
     }
 
     $(_params.nextButtonDomId, _$modal).html(_params.nextButtonText);
-    $(_params.nextButtonDomId, _$modal)
-    .off('click')
-    .on('click', _nextButtonFunction);
+    $(_params.nextButtonDomId, _$modal).off('click')
+      .on('click', _nextButtonFunction);
     $(_params.nextButtonDomId, _$modal).show();
     if(!_params.nextButtonIsVisible) {
       $(_params.nextButtonDomId, _$modal).hide();
     }
-
-    _params.onShowFunction(_$modal, data);
-    return _$modal;
   };
 
   return {
@@ -261,9 +261,12 @@ var Modal = function(params) {
         // TODO: add in a friendly message alerting that the modal is not ready yet
         return false;
       } else {
-        _setUpModal(data).modal('show');
+        _setUpModal(this, data);
+        _params.onShowFunction(_$modal, this, data);
+        _$modal.off('shown.bs.modal')
+          .on('shown.bs.modal', _params.onShownFunction(_$modal, this, data));
+        _$modal.modal('show');
       }
-    },
-    update: function(data) { this.show(data); }
+    }
   };
 };
