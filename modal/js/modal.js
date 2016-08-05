@@ -130,14 +130,14 @@ var Modal = function(params) {
   };
 
   var _cancelButtonFunction = function() {
-    _params.backButtonFunction(_$modal);
+    _params.cancelButtonFunction(_$modal);
   };
 
   var _nextButtonFunction = function() {
     _params.nextButtonFunction(_$modal);
   };
 
-  var _setUpModal = function(data) {
+  var _setUpModal = function() {
     if(!_$modal) { _$modal = $(_params.templateDomId); }
     $('.modal-dialog', _$modal).removeClass('modal-sm modal-lg')
       .addClass(_params.size);
@@ -261,12 +261,13 @@ var Modal = function(params) {
         // TODO: add in a friendly message alerting that the modal is not ready yet
         return false;
       } else {
-        _setUpModal(this, data);
+        this.update();
         _params.onShowFunction(_$modal, this, data);
         _$modal.off('shown.bs.modal')
           .on('shown.bs.modal', _params.onShownFunction(_$modal, this, data));
         _$modal.modal('show');
       }
-    }
+    },
+    update: function() { _setUpModal(); }
   };
 };
