@@ -249,6 +249,9 @@ var Modal = function(params) {
       }
       return this;
     },
+    getModal: function() {
+      return $(_params.templateDomId);
+    },
     isModalReady: function() {
       var readyCount = 0;
       for(var i = 0; i < _ajaxSuccessResponses.length; i++) {
