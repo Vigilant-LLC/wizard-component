@@ -125,26 +125,18 @@ var Modal = function(params) {
     });
   }
 
-  var _backButtonFunction = function() {
-    _params.backButtonFunction(_$modal);
-  };
-
-  var _cancelButtonFunction = function() {
-    _params.cancelButtonFunction(_$modal);
-  };
-
-  var _nextButtonFunction = function() {
-    _params.nextButtonFunction(_$modal);
-  };
-
-  var _setUpModal = function() {
+  var _setUpModal = function(modalInstance) {
     if(!_$modal) { _$modal = $(_params.templateDomId); }
+
     $('.modal-dialog', _$modal).removeClass('modal-sm modal-lg')
       .addClass(_params.size);
     $(_params.titleDomId, _$modal).html(_params.title);
     $(_params.ribbonContentDomId, _$modal).html(_params.ribbonContent);
     $(_params.mainContentDomId, _$modal).html(_params.mainContent);
 
+    var _backButtonFunction = function() {
+      _params.backButtonFunction(_$modal, modalInstance);
+    };
     $(_params.backButtonDomId, _$modal).html(_params.backButtonText);
     $(_params.backButtonDomId, _$modal).off('click')
       .on('click', _backButtonFunction);
@@ -153,6 +145,9 @@ var Modal = function(params) {
       $(_params.backButtonDomId, _$modal).hide();
     }
 
+    var _cancelButtonFunction = function() {
+      _params.cancelButtonFunction(_$modal, modalInstance);
+    };
     $(_params.cancelButtonDomId, _$modal).html(_params.cancelButtonText);
     $(_params.cancelButtonDomId, _$modal).off('click')
       .on('click', _cancelButtonFunction);
@@ -161,6 +156,9 @@ var Modal = function(params) {
       $(_params.cancelButtonDomId, _$modal).hide();
     }
 
+    var _nextButtonFunction = function() {
+      _params.nextButtonFunction(_$modal, modalInstance);
+    };
     $(_params.nextButtonDomId, _$modal).html(_params.nextButtonText);
     $(_params.nextButtonDomId, _$modal).off('click')
       .on('click', _nextButtonFunction);
@@ -250,7 +248,8 @@ var Modal = function(params) {
       return this;
     },
     getModal: function() {
-      return $(_params.templateDomId);
+      if(typeof(_$modal) !== 'object') { _$modal = $(_params.templateDomId); }
+      return _$modal;
     },
     isModalReady: function() {
       var readyCount = 0;
@@ -271,6 +270,7 @@ var Modal = function(params) {
         _$modal.modal('show');
       }
     },
-    update: function() { _setUpModal(); }
+    update: function() { _setUpModal(this); },
+    hide: function() { _$modal.modal('hide'); }
   };
 };
