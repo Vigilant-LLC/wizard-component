@@ -138,7 +138,8 @@ var Modal = function(params) {
       _params.backButtonFunction(_$modal, modalInstance);
     };
     $(_params.backButtonDomId, _$modal).html(_params.backButtonText);
-    $(_params.backButtonDomId, _$modal).off('click')
+    $(_params.backButtonDomId, _$modal)
+      .off('click')
       .on('click', _backButtonFunction);
     $(_params.backButtonDomId, _$modal).show();
     if(!_params.backButtonIsVisible) {
@@ -149,7 +150,11 @@ var Modal = function(params) {
       _params.cancelButtonFunction(_$modal, modalInstance);
     };
     $(_params.cancelButtonDomId, _$modal).html(_params.cancelButtonText);
-    $(_params.cancelButtonDomId, _$modal).off('click')
+    $(_params.cancelButtonDomId, _$modal)
+      .off('click')
+      .on('click', _cancelButtonFunction);
+    $('button[class="close"]', _$modal)
+      .off('click')
       .on('click', _cancelButtonFunction);
     $(_params.cancelButtonDomId, _$modal).show();
     if(!_params.cancelButtonIsVisible) {
@@ -160,7 +165,8 @@ var Modal = function(params) {
       _params.nextButtonFunction(_$modal, modalInstance);
     };
     $(_params.nextButtonDomId, _$modal).html(_params.nextButtonText);
-    $(_params.nextButtonDomId, _$modal).off('click')
+    $(_params.nextButtonDomId, _$modal)
+      .off('click')
       .on('click', _nextButtonFunction);
     $(_params.nextButtonDomId, _$modal).show();
     if(!_params.nextButtonIsVisible) {
@@ -265,9 +271,10 @@ var Modal = function(params) {
       } else {
         this.update();
         _params.onShowFunction(_$modal, this, data);
-        _$modal.off('shown.bs.modal')
-          .on('shown.bs.modal', _params.onShownFunction(_$modal, this, data));
-        _$modal.modal('show');
+        _$modal
+          .off('shown.bs.modal')
+          .on('shown.bs.modal', _params.onShownFunction(_$modal, this, data))
+          .modal('show');
       }
     },
     update: function() { _setUpModal(this); },
