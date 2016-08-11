@@ -16,10 +16,10 @@ var Modal = function(params) {
       size: '',
       title: '',
       titleDomId: '#modalTitle', /* required on creation */
-      ribbonContent: '',
+      ribbonContent: undefined,
       ribbonContentUrl: '', /* required on creation */
       ribbonContentDomId: '#modalRibbonContent', /* required on creation */
-      mainContent: '',
+      mainContent: undefined,
       mainContentUrl: '', /* required on creation */
       mainContentDomId: '#modalMainContent', /* required on creation */
 
@@ -57,77 +57,8 @@ var Modal = function(params) {
     params
   );
 
-  var _isModalInDomTimeout;
-  var _isModalInDomTimeoutCount = 1200; // 1 minute at 50 milisecond intervals
-  var _checkIfModalIsReady = function() {
-    clearTimeout(_isModalInDomTimeout);
-    if(_isModalInDomTimeoutCount-- > 0) {
-      if(loadedModalComponent) {
-        _ajaxSuccessResponses[_modalAjaxIndex] = true;
-      } else {
-        _isModalInDomTimeout = setTimeout(function() {
-          _checkIfModalIsReady();
-        }, 50);
-      }
-    }
-  }
-
-  /*** Grab the modal html ***/
-  if(typeof(loadedModalComponent) === 'undefined') {
-    $('body').append('<script>var loadedModalComponent = false;</script>');
-    $.ajax({
-      type: 'GET',
-      url: _params.templateUrl,
-      success: function(html) {
-        loadedModalComponent = true;
-        _ajaxSuccessResponses[_modalAjaxIndex] = true;
-        $('body').append(html);
-      },
-      error: function(err) {
-        //TODO: add in error function & maybe a retry mechanism
-      }
-    });
-  } else {
-    _checkIfModalIsReady();
-  }
-
-  if(typeof(_params.ribbonContentUrl) === 'string' && _params.ribbonContentUrl.length != 0) {
-    var ribbonAjaxIndex = _ajaxSuccessResponses.length;
-    _ajaxSuccessResponses.push(false);
-    $.ajax({
-      type: 'GET',
-      url: _params.ribbonContentUrl,
-      success: function(content) {
-        _params.ribbonContent = content;
-        _ajaxSuccessResponses[ribbonAjaxIndex] = true;
-      },
-      error: function(err) {
-        // TODO: clean this up to be a more friendly response
-        _params.ribbonContent = err;
-      }
-    });
-  }
-
-  if(typeof(_params.mainContentUrl) === 'string' && _params.mainContentUrl.length != 0) {
-    var mainContentAjaxIndex = _ajaxSuccessResponses.length;
-    _ajaxSuccessResponses.push(false);
-    $.ajax({
-      type: 'GET',
-      url: _params.mainContentUrl,
-      success: function(content) {
-        _params.mainContent = content;
-        _ajaxSuccessResponses[mainContentAjaxIndex] = true;
-      },
-      error: function(err) {
-        // TODO: clean this up to be a more friendly response
-        _params.mainContent = err;
-      }
-    });
-  }
-
   var _setUpModal = function(modalInstance) {
-    if(!_$modal) { _$modal = $(_params.templateDomId); }
-
+    _$modal = $(_params.templateDomId);
     $('.modal-dialog', _$modal).removeClass('modal-sm modal-lg')
       .addClass(_params.size);
     $(_params.titleDomId, _$modal).html(_params.title);
@@ -257,23 +188,59 @@ var Modal = function(params) {
       if(typeof(_$modal) !== 'object') { _$modal = $(_params.templateDomId); }
       return _$modal;
     },
-    isModalReady: function() {
-      var readyCount = 0;
-      for(var i = 0; i < _ajaxSuccessResponses.length; i++) {
-        if(_ajaxSuccessResponses[i] === true) { readyCount++; }
-      }
-      return (readyCount === _ajaxSuccessResponses.length) ? true : false;
-    },
     show: function(data) {
-      if(!this.isModalReady()) {
-        // TODO: add in a friendly message alerting that the modal is not ready yet
-        return false;
+      var modal = this;
+      if(!$(_params.templateDomId).length) {
+        $.ajax({
+          modal: modal,
+          type: 'GET',
+          url: _params.templateUrl,
+          success: function(html) {
+            $('body').append(html);
+            _$modal = $(_params.templateDomId);
+            modal.show(data);
+          }
+        });
+      } else if(typeof(_params.ribbonContentUrl) === 'string'
+                && _params.ribbonContentUrl.length != 0
+                && typeof(_params.ribbonContent) === 'undefined') {
+        $.ajax({
+          modal: this,
+          type: 'GET',
+          url: _params.ribbonContentUrl,
+          success: function(content) {
+            _params.ribbonContent = content;
+            modal.show(data);
+          },
+          error: function(err) {
+            // TODO: clean this up to be a more friendly response
+            _params.ribbonContent = err;
+            modal.show(data);
+          }
+        });
+      } else if(typeof(_params.mainContentUrl) === 'string'
+                && _params.mainContentUrl.length != 0
+                && typeof(_params.mainContent) === 'undefined') {
+        $.ajax({
+          modal: this,
+          type: 'GET',
+          url: _params.mainContentUrl,
+          success: function(content) {
+            _params.mainContent = content;
+            modal.show(data);
+          },
+          error: function(err) {
+            // TODO: clean this up to be a more friendly response
+            _params.mainContent = err;
+            modal.show(data);
+          }
+        });
       } else {
-        this.update();
-        _params.onShowFunction(_$modal, this, data);
+        modal.update();
+        _params.onShowFunction(_$modal, modal, data);
         _$modal
           .off('shown.bs.modal')
-          .on('shown.bs.modal', _params.onShownFunction(_$modal, this, data))
+          .on('shown.bs.modal', _params.onShownFunction(_$modal, modal, data))
           .modal('show');
       }
     },
