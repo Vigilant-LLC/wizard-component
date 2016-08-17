@@ -1,15 +1,12 @@
 var Modal = function(params) {
   if(!params || typeof(params) !== 'object') { params = {}; }
   var _noop = function() {};
-
-  var _ajaxSuccessResponses = [ false ];
-  var _modalAjaxIndex = 0;
   var _$modal;
   var _params = $.extend(
     true,
     {
       /*** Template Content ***/
-      templateUrl: '', /*** required on creation ***/
+      templateUrl: '', /* required on creation */
       templateDomId: '#modal', /*** required on creation ***/
 
       /*** Modal Content ***/
@@ -191,22 +188,24 @@ var Modal = function(params) {
     show: function(data) {
       var modal = this;
       if(!$(_params.templateDomId).length) {
-        $.ajax({
+        new Data({
           modal: modal,
           type: 'GET',
+          dataType: 'text',
           url: _params.templateUrl,
           success: function(html) {
             $('body').append(html);
             _$modal = $(_params.templateDomId);
             modal.show(data);
           }
-        });
+        }).ajax();
       } else if(typeof(_params.ribbonContentUrl) === 'string'
                 && _params.ribbonContentUrl.length != 0
                 && typeof(_params.ribbonContent) === 'undefined') {
-        $.ajax({
+        new Data({
           modal: this,
           type: 'GET',
+          dataType: 'text',
           url: _params.ribbonContentUrl,
           success: function(content) {
             _params.ribbonContent = content;
@@ -217,13 +216,14 @@ var Modal = function(params) {
             _params.ribbonContent = err;
             modal.show(data);
           }
-        });
+        }).ajax();
       } else if(typeof(_params.mainContentUrl) === 'string'
                 && _params.mainContentUrl.length != 0
                 && typeof(_params.mainContent) === 'undefined') {
-        $.ajax({
+        new Data({
           modal: this,
           type: 'GET',
+          dataType: 'text',
           url: _params.mainContentUrl,
           success: function(content) {
             _params.mainContent = content;
@@ -234,7 +234,7 @@ var Modal = function(params) {
             _params.mainContent = err;
             modal.show(data);
           }
-        });
+        }).ajax();
       } else {
         modal.update();
         _params.onShowFunction(_$modal, modal, data);
