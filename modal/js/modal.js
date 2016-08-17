@@ -191,7 +191,6 @@ var Modal = function(params) {
         new Data({
           modal: modal,
           type: 'GET',
-          dataType: 'text',
           url: _params.templateUrl,
           success: function(html) {
             $('body').append(html);
@@ -205,7 +204,6 @@ var Modal = function(params) {
         new Data({
           modal: this,
           type: 'GET',
-          dataType: 'text',
           url: _params.ribbonContentUrl,
           success: function(content) {
             _params.ribbonContent = content;
@@ -223,7 +221,6 @@ var Modal = function(params) {
         new Data({
           modal: this,
           type: 'GET',
-          dataType: 'text',
           url: _params.mainContentUrl,
           success: function(content) {
             _params.mainContent = content;
