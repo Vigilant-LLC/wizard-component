@@ -1,3 +1,4 @@
+var MODAL_IS_SHOWN = false;
 var Modal = function(params) {
   if(!params || typeof(params) !== 'object') { params = {}; }
   var _noop = function() {};
@@ -237,11 +238,20 @@ var Modal = function(params) {
         _params.onShowFunction(_$modal, modal, data);
         _$modal
           .off('shown.bs.modal')
-          .on('shown.bs.modal', function() { _params.onShownFunction(_$modal, modal, data) })
+          .on('shown.bs.modal', function() {
+            MODAL_IS_SHOWN = true;
+            _params.onShownFunction(_$modal, modal, data)
+          })
           .modal('show');
+        if(MODAL_IS_SHOWN) {
+          _params.onShownFunction(_$modal, modal, data);
+        }
       }
     },
     update: function() { _setUpModal(this); },
-    hide: function() { _$modal.modal('hide'); }
+    hide: function() {
+      MODAL_IS_SHOWN = false;
+      _$modal.modal('hide');
+    }
   };
 };
