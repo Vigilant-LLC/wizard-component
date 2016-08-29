@@ -59,8 +59,8 @@ var Modal = function(params) {
     $('.modal-dialog', _$modal).removeClass('modal-sm modal-lg')
       .addClass(_params.size);
     $(_params.titleDomId, _$modal).html(_params.title);
-    $(_params.ribbonContentDomId, _$modal).html(_params.ribbonContent);
-    $(_params.mainContentDomId, _$modal).html(_params.mainContent);
+    $(_params.ribbonContentDomId, _$modal).html(_params.ribbonContent || '');
+    $(_params.mainContentDomId, _$modal).html(_params.mainContent || '');
 
     var _backButtonFunction = function() {
       _params.backButtonFunction(_$modal, modalInstance);
@@ -237,7 +237,7 @@ var Modal = function(params) {
         _params.onShowFunction(_$modal, modal, data);
         _$modal
           .off('shown.bs.modal')
-          .on('shown.bs.modal', _params.onShownFunction(_$modal, modal, data))
+          .on('shown.bs.modal', function() { _params.onShownFunction(_$modal, modal, data) })
           .modal('show');
       }
     },
