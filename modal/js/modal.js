@@ -21,6 +21,10 @@ var Modal = function(params) {
       mainContentUrl: '', /* required on creation */
       mainContentDomId: '#modalMainContent', /* required on creation */
 
+      /*** Options for dismissing the modal ***/
+      backroundClickShouldCloseModal: false,
+      keyboardShouldCloseModal: false,
+
       /*** Buttons ***/
       // All button functions will be passed the modal object so that they may
       // utilize anything from the modal that they choose.
@@ -101,6 +105,18 @@ var Modal = function(params) {
     if(!_params.nextButtonIsVisible) {
       $(_params.nextButtonDomId, _$modal).hide();
     }
+
+    var backdrop = _params.backroundClickShouldCloseModal ? true : 'static';
+    if(!_$modal.data().hasOwnProperty('bs.modal')) {
+      _$modal.modal({
+        backdrop: backdrop,
+        keyboard: _params.keyboardShouldCloseModal,
+        show: false
+      });
+    } else {
+      _$modal.data('bs.modal').options.backdrop = backdrop;
+      _$modal.data('bs.modal').options.keyboard = _params.keyboardShouldCloseModal;
+    }
   };
 
   return {
@@ -179,6 +195,19 @@ var Modal = function(params) {
     setNextButtonIsVisible: function(buttonIsVisible) {
       if(typeof(buttonIsVisible) === 'boolean') {
         _params.nextButtonIsVisible = buttonIsVisible;
+      }
+      return this;
+    },
+    setBackroundClickShouldCloseModal: function(backroundClickShouldCloseModal)
+    {
+      if(typeof(backroundClickShouldCloseModal) === 'boolean') {
+        _params.backroundClickShouldCloseModal = backroundClickShouldCloseModal;
+      }
+      return this;
+    },
+    setKeyboardShouldCloseModal: function(keyboardShouldCloseModal) {
+      if(typeof(keyboardShouldCloseModal) == 'boolean') {
+        _params.keyboardShouldCloseModal = keyboardShouldCloseModal;
       }
       return this;
     },
